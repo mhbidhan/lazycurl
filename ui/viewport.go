@@ -5,7 +5,6 @@ import (
 
 	"github.com/charmbracelet/bubbles/viewport"
 	tea "github.com/charmbracelet/bubbletea"
-	"github.com/charmbracelet/lipgloss"
 )
 
 // Chrome is a fixed-height block rendered above or below the viewport.
@@ -17,42 +16,33 @@ type Chrome interface {
 }
 
 type Viewport struct {
-	viewport viewport.Model
-	header   Chrome
-	footer   Chrome
+	model  viewport.Model
+	header Chrome
+	footer Chrome
 }
 
 func NewViewport(width, height int, header, footer Chrome) *Viewport {
 	return &Viewport{
-		viewport: viewport.New(width, height),
-		header:   header,
-		footer:   footer,
+		model:  viewport.New(width, height),
+		header: header,
+		footer: footer,
 	}
 }
 
 func (v *Viewport) Width() int {
-	return v.viewport.Width
+	return v.model.Width
 }
 
 func (v *Viewport) Height() int {
-	return v.viewport.Height
+	return v.model.Height
 }
 
-// ContentWidth is the width available to content once the viewport style's
-// padding, border and margins are subtracted.
 func (v *Viewport) ContentWidth() int {
-	return v.viewport.Width - v.viewport.Style.GetHorizontalFrameSize()
+	return v.model.Width - v.model.Style.GetHorizontalFrameSize()
 }
 
-// ContentHeight is the height available to content once the viewport style's
-// padding, border and margins are subtracted.
 func (v *Viewport) ContentHeight() int {
-	return v.viewport.Height - v.viewport.Style.GetVerticalFrameSize()
-}
-
-// SetStyle replaces the style applied around viewport content.
-func (v *Viewport) SetStyle(style lipgloss.Style) {
-	v.viewport.Style = style
+	return v.model.Height - v.model.Style.GetVerticalFrameSize()
 }
 
 func (v *Viewport) Init() tea.Cmd { return nil }
@@ -69,16 +59,16 @@ func (v *Viewport) Update(msg tea.Msg) tea.Cmd {
 			h -= v.footer.Height()
 		}
 
-		v.viewport.Width = max(size.Width, 1)
-		v.viewport.Height = max(h, 1)
+		v.model.Width = max(size.Width, 1)
+		v.model.Height = max(h, 1)
 	}
 
-	v.viewport, cmd = v.viewport.Update(msg)
+	v.model, cmd = v.model.Update(msg)
 	return cmd
 }
 
 func (v *Viewport) SetContent(content string) {
-	v.viewport.SetContent(content)
+	v.model.SetContent(content)
 }
 
 func (v *Viewport) View() string {
@@ -89,7 +79,7 @@ func (v *Viewport) View() string {
 		b.WriteRune('\n')
 	}
 
-	b.WriteString(v.viewport.View())
+	b.WriteString(v.model.View())
 
 	if v.footer != nil {
 		b.WriteRune('\n')
