@@ -8,6 +8,8 @@ import (
 	"gorm.io/gorm"
 )
 
+// InitDB opens the local SQLite database and migrates the collection schema.
+// The file lives in tmp/ relative to the working directory.
 func InitDB() *gorm.DB {
 	if err := os.MkdirAll("tmp", 0o755); err != nil {
 		log.Fatal("Failed to create data directory:", err)
@@ -19,7 +21,9 @@ func InitDB() *gorm.DB {
 	}
 
 	// Schema migrations
-	db.AutoMigrate(&Collection{})
+	if err := db.AutoMigrate(&Collection{}); err != nil {
+		log.Fatal("Failed to migrate database:", err)
+	}
 
 	return db
 }
