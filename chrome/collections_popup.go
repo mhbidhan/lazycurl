@@ -7,6 +7,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 	"github.com/mhbidhan/lazycurl/keybind"
 	"github.com/mhbidhan/lazycurl/store"
+	"github.com/mhbidhan/lazycurl/theme"
 	"github.com/mhbidhan/lazycurl/ui"
 	"gorm.io/gorm"
 )
@@ -32,6 +33,11 @@ const (
 	editCollectionPopup PopupID = "edit_collection"
 	confirmPopup        PopupID = "confirm"
 )
+
+// Rows under the list in every state: a gap, the help line and the status line.
+// They are reserved while sizing so opening a search or a sub-popup cannot
+// grow the frame past the area the screen gave it.
+const footerRows = 3
 
 // CollectionsPopup browses collections and owns the flows that change them.
 // Everything it does beyond browsing lives in its own file, named after the
@@ -59,8 +65,11 @@ type CollectionsPopup struct {
 	target *store.Collection
 	// pendingName is the name the rename confirmation is asking to commit.
 	pendingName string
+	// err is the last failed operation, shown as a status line in the popup.
+	err error
 }
 
+// NewCollectionsPopup builds the browser and loads its first page of rows.
 func NewCollectionsPopup(db *gorm.DB, w, h int) *CollectionsPopup {
 	pm := NewPopupManager()
 	namePromptPopup := NewNamePromptPopup("New collection: ", "")
@@ -77,20 +86,18 @@ func NewCollectionsPopup(db *gorm.DB, w, h int) *CollectionsPopup {
 		input: newSearchInput(),
 	}
 
-	c.reload()
+	c.err = c.reload()
 
 	return c
 }
 
 // reload re-reads the rows from the store and redraws. Every flow that changes
-// the data ends here.
-func (c *CollectionsPopup) reload() {
+// the data ends here. Load failures are returned so the caller can show them.
+func (c *CollectionsPopup) reload() error {
 	rows, err := store.GetCollections(c.db)
-	if err != nil {
-		rows = nil
-	}
 	c.list.setRows(rows)
 	c.list.syncView()
+	return err
 }
 
 func (c *CollectionsPopup) Init() tea.Cmd {
@@ -100,6 +107,14 @@ func (c *CollectionsPopup) Init() tea.Cmd {
 // Update is a dispatch table. The handling for each state belongs to the file
 // named after that flow, so this is the whole of the routing.
 func (c *CollectionsPopup) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
+	// Errors arrive as commands, after the flow that caused them has already
+	// returned to the list. Handle them before state dispatch so no state can
+	// swallow the status line.
+	if ev, ok := msg.(OperationError); ok {
+		c.err = ev.Err
+		return c, nil
+	}
+
 	switch c.state {
 	case stateList:
 		return c, c.updateList(msg)
@@ -151,41 +166,54 @@ func (c *CollectionsPopup) updateList(msg tea.Msg) tea.Cmd {
 }
 
 // SetSize lays out the popup around the area inside its own frame. The list gets
-// what the search field does not need, and the sub-popups get what is left once
-// their frame is accounted for, so every level of nesting stays inside the one
-// above it.
+// what the search field, footer and status line do not need, and nested popups
+// get what is left once their own frame is accounted for.
 func (c *CollectionsPopup) SetSize(w, h int) {
 	c.width, c.height = max(w, 1), max(h, 1)
 
-	// Room for the filter field is reserved whether or not a search is running,
-	// which keeps the list from changing height when one opens.
-	c.list.SetSize(c.width, max(c.height-searchFieldRows, 1))
+	// Reserve every state's rows at once: opening a search or showing an error
+	// must not change the frame's height.
+	c.list.SetSize(c.width, max(c.height-searchFieldRows-footerRows, 1))
 	c.input.Width = fieldWidth(c.width, searchPrompt)
 
-	// A sub-popup brings its own frame, so it is sized against what is left of
-	// this popup's content area once that frame is subtracted.
 	c.pm.SetSize(
 		max(c.width-ui.PopupFrameWidth, 1),
 		max(c.height-ui.PopupFrameHeight, 1),
 	)
 }
 
+// statusView is the error line, or one blank row when there is no error. It
+// always takes the same space so the popup does not jump when a failure shows.
+func (c *CollectionsPopup) statusView() string {
+	msg := ""
+	if c.err != nil {
+		msg = "Error: " + c.err.Error()
+	}
+
+	return lipgloss.NewStyle().
+		MaxWidth(c.width).
+		Height(1).
+		Foreground(lipgloss.Color(theme.Error)).
+		Render(msg)
+}
+
+// fit crops content to the area inside the frame. Wrapping an overlong line
+// would tear the rounded border apart instead of just clipping it.
+func (c *CollectionsPopup) fit(s string) string {
+	return lipgloss.NewStyle().MaxWidth(c.width).MaxHeight(c.height).Render(s)
+}
+
 func (c *CollectionsPopup) View() string {
-	var content string
 	help := c.keybind.ShortHelp()
+	status := c.statusView()
 
 	if _, m := c.pm.Active(); m != nil {
-		// Crop before centering for the same reason overlay does: a sub-popup
-		// a column too wide would otherwise wrap and break its own frame. The
-		// area is the whole content area, not the list's, so a short sub-popup
-		// is not cropped for being shorter than the list.
-
 		sub := lipgloss.NewStyle().
 			MaxWidth(c.width).
 			MaxHeight(c.height).
 			Render(m.View())
 
-		content = lipgloss.JoinVertical(lipgloss.Top, sub, ui.GapVertical(1), help)
+		content := c.fit(lipgloss.JoinVertical(lipgloss.Top, sub, ui.GapVertical(1), help, status))
 
 		return lipgloss.NewStyle().
 			Align(lipgloss.Center, lipgloss.Center).
@@ -195,10 +223,8 @@ func (c *CollectionsPopup) View() string {
 	}
 
 	if c.state == stateSearch {
-		content = lipgloss.JoinVertical(lipgloss.Top, c.searchView(), ui.GapVertical(1), help)
-		return ui.PopupBox(content)
+		return ui.PopupBox(c.fit(lipgloss.JoinVertical(lipgloss.Top, c.searchView(), ui.GapVertical(1), help, status)))
 	}
 
-	content = lipgloss.JoinVertical(lipgloss.Top, c.list.view(), ui.GapVertical(1), help)
-	return ui.PopupBox(content)
+	return ui.PopupBox(c.fit(lipgloss.JoinVertical(lipgloss.Top, c.list.view(), ui.GapVertical(1), help, status)))
 }

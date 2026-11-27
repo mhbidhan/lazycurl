@@ -8,4 +8,6 @@ const (
 	OnPrimary = "0"
 	// Heading is the title of a popup's list.
 	Heading = "9"
+	// Error is the status line that reports a failed store operation.
+	Error = "196"
 )

@@ -1,6 +1,7 @@
 package chrome
 
 import (
+	"errors"
 	"strings"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -23,14 +24,15 @@ func (c *CollectionsPopup) updateCreate(msg tea.Msg) tea.Cmd {
 		return c.pm.Update(msg)
 	}
 
+	var err error
 	if name := strings.TrimSpace(ev.Value); !ev.Cancel && name != "" {
-		_ = store.SaveCollection(c.db, store.NewCollection(name))
-		c.reload()
+		err = store.SaveCollection(c.db, store.NewCollection(name))
 	}
+	err = errors.Join(err, c.reload())
 
 	c.state = stateList
 	c.pm.Close(newCollectionPopup)
 	c.list.syncView()
 
-	return nil
+	return c.report(err)
 }

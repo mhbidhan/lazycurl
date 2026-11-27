@@ -1,6 +1,7 @@
 package chrome
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -32,8 +33,7 @@ func (c *CollectionsPopup) updateRename(msg tea.Msg) tea.Cmd {
 
 	if ev, ok := msg.(ConfirmEvent); ok {
 		c.pm.Close(confirmPopup)
-		c.finishRename(ev.Confirmed)
-		return nil
+		return c.finishRename(ev.Confirmed)
 	}
 
 	return c.pm.Update(msg)
@@ -58,15 +58,18 @@ func (c *CollectionsPopup) askRenameConfirm(ev NamePromptEvent) {
 	c.pm.Open(confirmPopup)
 }
 
-func (c *CollectionsPopup) finishRename(confirmed bool) {
+func (c *CollectionsPopup) finishRename(confirmed bool) tea.Cmd {
+	var err error
 	if confirmed && c.target != nil {
 		coll := *c.target
 		coll.Name = c.pendingName
-		_ = store.SaveCollection(c.db, &coll)
+		err = store.SaveCollection(c.db, &coll)
 	}
+	err = errors.Join(err, c.reload())
 
 	c.target = nil
 	c.pendingName = ""
 	c.state = stateList
-	c.reload()
+
+	return c.report(err)
 }

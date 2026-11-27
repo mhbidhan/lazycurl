@@ -1,6 +1,7 @@
 package chrome
 
 import (
+	"errors"
 	"fmt"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -28,12 +29,14 @@ func (c *CollectionsPopup) updateDelete(msg tea.Msg) tea.Cmd {
 	}
 
 	c.pm.Close(confirmPopup)
+	var err error
 	if ev.Confirmed && c.target != nil {
-		_ = store.DeleteCollection(c.db, c.target.ID)
+		err = store.DeleteCollection(c.db, c.target.ID)
 	}
+	err = errors.Join(err, c.reload())
+
 	c.target = nil
 	c.state = stateList
-	c.reload()
 
-	return nil
+	return c.report(err)
 }
