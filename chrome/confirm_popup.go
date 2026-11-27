@@ -23,6 +23,7 @@ type ConfirmPopup struct {
 	keybinds *keybind.ConfirmKeys
 }
 
+// NewConfirmPopup builds a yes/no prompt for the given question.
 func NewConfirmPopup(question string) *ConfirmPopup {
 	return &ConfirmPopup{
 		question: question,

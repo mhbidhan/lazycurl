@@ -8,11 +8,13 @@ import (
 	"github.com/mhbidhan/lazycurl/ui"
 )
 
+// HelpPopup shows a scrollable list of key bindings.
 type HelpPopup struct {
 	vp       viewport.Model
 	keybinds *keybind.HelpPopupKeys
 }
 
+// NewHelpPopup builds the keybinds popup with content sized to w by h.
 func NewHelpPopup(bindings []keybind.KeyInfo, w, h int) *HelpPopup {
 	vp := viewport.New(w, h)
 	vp.MouseWheelEnabled = true

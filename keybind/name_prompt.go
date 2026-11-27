@@ -11,6 +11,7 @@ type NamePromptKeys struct {
 	Cancel key.Binding
 }
 
+// NewNamePromptKeys builds the submit and cancel bindings of a name prompt.
 func NewNamePromptKeys() *NamePromptKeys {
 	return &NamePromptKeys{
 		Submit: key.NewBinding(

@@ -28,6 +28,7 @@ type NamePromptPopup struct {
 	keybinds *keybind.NamePromptKeys
 }
 
+// NewNamePromptPopup builds a single-field prompt starting at initial.
 func NewNamePromptPopup(prompt, initial string) *NamePromptPopup {
 	input := textinput.New()
 	input.CharLimit = 50

@@ -10,6 +10,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// HomeScreen renders the landing view and owns the top-level popups.
 type HomeScreen struct {
 	width  int
 	height int
@@ -25,6 +26,7 @@ const (
 	popupMaxHeight = 12
 )
 
+// NewHomeScreen builds the home screen and registers its popups.
 func NewHomeScreen(db *gorm.DB, w, h int) *HomeScreen {
 	kb := keybind.NewHomeKeys()
 	pm := chrome.NewPopupManager()

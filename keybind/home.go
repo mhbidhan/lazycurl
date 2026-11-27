@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 )
 
+// HomeKeys are the bindings available when no popup is open.
 type HomeKeys struct {
 	helpModel   help.Model
 	Keybind     key.Binding
@@ -12,6 +13,7 @@ type HomeKeys struct {
 	Quit        key.Binding
 }
 
+// NewHomeKeys builds the home screen bindings with their help labels.
 func NewHomeKeys() *HomeKeys {
 	return &HomeKeys{
 		helpModel: help.New(),
@@ -30,10 +32,12 @@ func NewHomeKeys() *HomeKeys {
 	}
 }
 
+// ShortHelp renders the bindings shown on the home screen itself.
 func (k *HomeKeys) ShortHelp() string {
 	return k.helpModel.ShortHelpView([]key.Binding{k.Keybind, k.Quit})
 }
 
+// GetKeybinds lists every home binding for the keybinds popup.
 func (k *HomeKeys) GetKeybinds() []KeyInfo {
 	return []KeyInfo{
 		{Key: "?", Help: "keybinds"},

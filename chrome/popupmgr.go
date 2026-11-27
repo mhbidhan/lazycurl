@@ -37,6 +37,7 @@ type OnOpener interface {
 // the owner decides what "open" means.
 type DismissPopup struct{}
 
+// PopupManager owns a set of popups and tracks which one has the keyboard.
 type PopupManager struct {
 	popups map[PopupID]tea.Model
 	active PopupID
@@ -47,6 +48,7 @@ type PopupManager struct {
 	w, h int
 }
 
+// NewPopupManager builds a manager with no registered popups.
 func NewPopupManager() *PopupManager {
 	return &PopupManager{
 		popups: make(map[PopupID]tea.Model),
@@ -54,6 +56,7 @@ func NewPopupManager() *PopupManager {
 	}
 }
 
+// Register adds a popup under id and sizes it to the last known area.
 func (pm *PopupManager) Register(id PopupID, p tea.Model) {
 	pm.popups[id] = p
 
@@ -92,10 +95,12 @@ func (pm *PopupManager) Active() (PopupID, tea.Model) {
 	return "", nil
 }
 
+// IsOpen reports whether any popup currently owns the keyboard.
 func (pm *PopupManager) IsOpen() bool {
 	return pm.active != ""
 }
 
+// Update forwards a message to the active popup and stores the returned model.
 func (pm *PopupManager) Update(msg tea.Msg) tea.Cmd {
 	if id, m := pm.Active(); m != nil {
 		updated, cmd := m.Update(msg)
