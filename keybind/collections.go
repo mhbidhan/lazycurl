@@ -5,6 +5,7 @@ import (
 	"github.com/charmbracelet/bubbles/key"
 )
 
+// CollectionKeys are the bindings for browsing collections and their flows.
 type CollectionKeys struct {
 	helpModel  help.Model
 	CursorDown key.Binding
@@ -14,9 +15,10 @@ type CollectionKeys struct {
 	Delete     key.Binding
 	Edit       key.Binding
 	Escape     key.Binding
-	Quit       key.Binding
+	Submit     key.Binding
 }
 
+// NewCollectionKeys builds the collections bindings with their help labels.
 func NewCollectionKeys() *CollectionKeys {
 	return &CollectionKeys{
 		helpModel: help.New(),
@@ -48,13 +50,19 @@ func NewCollectionKeys() *CollectionKeys {
 			key.WithKeys("ctrl+e"),
 			key.WithHelp("ctrl+e", "rename collection"),
 		),
+		Submit: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "apply filter"),
+		),
 	}
 }
 
+// ShortHelp renders the hint line under the collections popup.
 func (k *CollectionKeys) ShortHelp() string {
 	return k.helpModel.ShortHelpView([]key.Binding{k.CursorDown, k.CursorUp, k.Escape})
 }
 
+// GetKeybinds lists every collections binding for the keybinds popup.
 func (k *CollectionKeys) GetKeybinds() []KeyInfo {
 	return []KeyInfo{
 		{Key: "j/down", Help: "cursor down"},
@@ -64,5 +72,6 @@ func (k *CollectionKeys) GetKeybinds() []KeyInfo {
 		{Key: "/", Help: "search collection"},
 		{Key: "ctrl+d", Help: "delete collection"},
 		{Key: "ctrl+e", Help: "rename collection"},
+		{Key: "enter", Help: "apply filter"},
 	}
 }

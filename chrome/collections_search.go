@@ -1,6 +1,7 @@
 package chrome
 
 import (
+	"github.com/charmbracelet/bubbles/key"
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
@@ -39,13 +40,13 @@ func (c *CollectionsPopup) closeSearch() {
 
 func (c *CollectionsPopup) updateSearch(msg tea.Msg) tea.Cmd {
 	if keyMsg, ok := msg.(tea.KeyMsg); ok {
-		switch keyMsg.Type {
-		case tea.KeyEnter:
+		switch {
+		case key.Matches(keyMsg, c.keybind.Submit):
 			// Keep the filter, just stop editing it.
 			c.closeSearch()
 			c.list.refresh()
 			return nil
-		case tea.KeyEsc, tea.KeyCtrlC:
+		case key.Matches(keyMsg, c.keybind.Escape):
 			c.closeSearch()
 			c.list.clearQuery()
 			c.list.refresh()
