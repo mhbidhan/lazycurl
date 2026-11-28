@@ -20,10 +20,12 @@ type HomeScreen struct {
 }
 
 // How big a popup is allowed to get. Both are caps rather than sizes: a popup
-// shrinks below them whenever the terminal is too small to hold them.
+// shrinks below them whenever the terminal is too small to hold them. The
+// height leaves room for four two-line collection rows, the title, the search
+// field and the footer.
 const (
 	popupMaxWidth  = 40
-	popupMaxHeight = 12
+	popupMaxHeight = 14
 )
 
 // NewHomeScreen builds the home screen and registers its popups.

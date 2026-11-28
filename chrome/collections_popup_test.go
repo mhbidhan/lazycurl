@@ -194,6 +194,31 @@ func TestRenameFlow(t *testing.T) {
 	}
 }
 
+func TestPopupShowsFourCollectionsAtMaxSize(t *testing.T) {
+	p := testPopup(t, 40, 14)
+	for _, name := range []string{"one", "two", "three", "four", "five", "six"} {
+		if err := store.SaveCollection(p.db, store.NewCollection(name)); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := p.reload(); err != nil {
+		t.Fatal(err)
+	}
+
+	if p.list.vp.Height != listContentLines {
+		t.Fatalf("viewport height = %d, want %d", p.list.vp.Height, listContentLines)
+	}
+	view := p.View()
+	for _, want := range []string{"one", "two", "three", "four"} {
+		if !strings.Contains(view, want) {
+			t.Fatalf("popup is missing %q:\n%s", want, view)
+		}
+	}
+	if strings.Contains(view, "five") {
+		t.Fatalf("fifth collection visible without scrolling:\n%s", view)
+	}
+}
+
 func TestHelpLineHasOnlyFramePaddingBelow(t *testing.T) {
 	p := testPopup(t, 40, 14)
 	if err := store.SaveCollection(p.db, store.NewCollection("work")); err != nil {

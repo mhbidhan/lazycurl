@@ -121,6 +121,41 @@ func TestCollectionListScroll(t *testing.T) {
 	}
 }
 
+func TestCollectionListShowsFourRows(t *testing.T) {
+	l := newCollectionList(30, listMinHeight)
+	l.SetSize(30, listMinHeight)
+	l.setRows(listRows(8))
+	l.syncView()
+
+	if l.vp.Height != listContentLines {
+		t.Fatalf("viewport height = %d, want %d", l.vp.Height, listContentLines)
+	}
+	row := func(name string) string { return " " + name + " " }
+	for _, want := range []string{"a", "b", "c", "d"} {
+		if !strings.Contains(l.view(), row(want)) {
+			t.Fatalf("top of list is missing %q:\n%s", want, l.view())
+		}
+	}
+	if strings.Contains(l.view(), row("e")) {
+		t.Fatalf("fifth row visible at the top:\n%s", l.view())
+	}
+
+	for range listVisibleRows {
+		l.moveDown()
+	}
+	if l.vp.YOffset != listRowLines {
+		t.Fatalf("offset after four moves = %d, want %d", l.vp.YOffset, listRowLines)
+	}
+	for _, want := range []string{"b", "c", "d", "e"} {
+		if !strings.Contains(l.view(), row(want)) {
+			t.Fatalf("scrolled list is missing %q:\n%s", want, l.view())
+		}
+	}
+	if strings.Contains(l.view(), row("a")) {
+		t.Fatalf("first row still visible after scrolling:\n%s", l.view())
+	}
+}
+
 func TestCollectionListRenderingAndSizing(t *testing.T) {
 	l := newCollectionList(30, 6)
 	l.setRows([]store.Collection{{Name: "work"}})

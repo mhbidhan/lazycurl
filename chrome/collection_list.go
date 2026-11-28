@@ -23,6 +23,12 @@ const (
 	// counts with it, so the highlight and the scroll position cannot drift
 	// apart.
 	listRowLines = 2
+
+	// listVisibleRows is how many collections the viewport shows at once. The
+	// viewport works in lines, so it needs one listRowLines block per row.
+	listVisibleRows  = 4
+	listContentLines = listVisibleRows * listRowLines
+	listMinHeight    = listHeaderLines + listContentLines
 )
 
 // collectionList is the scrollable list behind the collections popup. It owns
@@ -50,7 +56,7 @@ func newCollectionList(w, h int) *collectionList {
 	}
 	// Through SetSize, so the reserved title rows and the gap are decided the
 	// same way here as on every later resize.
-	l.SetSize(max(w, 40), max(h, 12))
+	l.SetSize(max(w, 40), max(h, listMinHeight))
 
 	return l
 }
@@ -155,7 +161,7 @@ func (l *collectionList) scrollToCursor() {
 		return
 	}
 	if y >= l.vp.YOffset+l.vp.Height {
-		l.vp.SetYOffset(y - l.vp.Height + 2)
+		l.vp.SetYOffset(y - l.vp.Height + listRowLines)
 	}
 }
 
