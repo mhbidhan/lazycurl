@@ -94,16 +94,16 @@ func (l *collectionList) applyFilter() {
 
 	res := make([]store.Collection, 0, len(l.collections))
 	for _, coll := range l.collections {
-		if fuzzyMatch(coll.Name, l.query) {
+		if FuzzyMatch(coll.Name, l.query) {
 			res = append(res, coll)
 		}
 	}
 	l.filtered = res
 }
 
-// fuzzyMatch reports whether pattern appears in s as a subsequence,
-// case-insensitively.
-func fuzzyMatch(s, pattern string) bool {
+// FuzzyMatch reports whether pattern appears in s as a subsequence,
+// case-insensitively. Other screens reuse it for their name filters.
+func FuzzyMatch(s, pattern string) bool {
 	if pattern == "" {
 		return true
 	}

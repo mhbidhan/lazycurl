@@ -30,8 +30,8 @@ func TestFuzzyMatch(t *testing.T) {
 		{"work", "krow", false},
 	}
 	for _, tc := range cases {
-		if got := fuzzyMatch(tc.s, tc.pattern); got != tc.want {
-			t.Errorf("fuzzyMatch(%q, %q) = %t, want %t", tc.s, tc.pattern, got, tc.want)
+		if got := FuzzyMatch(tc.s, tc.pattern); got != tc.want {
+			t.Errorf("FuzzyMatch(%q, %q) = %t, want %t", tc.s, tc.pattern, got, tc.want)
 		}
 	}
 }
