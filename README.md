@@ -12,9 +12,14 @@ navigation. The product goal, coding guidelines and guardrails are in
   `n`, delete with `ctrl+d`, rename with `ctrl+e`, dismiss with `esc`.
 - Create and rename prompts, delete/rename confirmations, and a status line that
   reports failed database operations.
+- Explorer: pressing `enter` on a collection replaces the home screen with a
+  full-screen tree browser. Navigate with vim motions, filter with `/`, create,
+  rename, delete, mark to move or copy, paste and reorder nodes. Directories may
+  contain other nodes; requests are leaves.
 
 Request editing, sending HTTP calls and viewing responses are **not implemented
-yet**; only collection management works today.
+yet**. Request fields have persisted defaults, but only the tree can be edited
+today.
 
 ## Keys
 
@@ -30,6 +35,35 @@ yet**; only collection management works today.
 | `ctrl+e` | rename selected collection |
 | `esc` / `ctrl+c` | close the active popup or prompt |
 
+### Explorer keys
+
+| Key | Action |
+|---|---|
+| `enter` (collections popup) | open the selected collection |
+| `j` / `down`, `k` / `up` | move the tree cursor |
+| `h` / `left`, `l` / `right` | collapse or expand a directory |
+| `enter` | toggle the selected directory |
+| `g` / `G` | jump to top / bottom |
+| `/` | fuzzy-filter nodes (`enter` keeps, `esc` clears) |
+| `a` / `A` | add a request / directory (one name prompt) |
+| `d` | delete the selected node and its descendants |
+| `r` | rename the selected node |
+| `x` / `c` | mark the selected node to move / copy it |
+| `p` | paste the marked node into or after the target |
+| `J` / `K` | move the node down / up among its siblings |
+| `?` | keybinds popup |
+| `esc` / `q` | return to the home screen |
+
+`a` creates a request from the name you type; ending the name with `/` creates
+a directory instead and the slash is not stored. `A` always creates a directory.
+`x` marks a node to move; `c` marks it to copy. `p` pastes into a selected
+directory as its last child, or after a selected request as the next sibling.
+Copies get fresh IDs; copying a directory also copies its whole subtree and the
+original stays untouched. The explorer expands a collapsed target directory so
+the result stays visible. Cycles and moves into requests are rejected and shown
+on the status line; a rejected paste keeps the mark so the target can be changed
+without re-marking.
+
 ## Develop
 
 - `go build ./...` — build every package.
@@ -43,12 +77,14 @@ and `tmp/` are gitignored.
 
 ## Layout
 
-`main.go` starts the Bubble Tea program and delegates to `screen.Root` →
-`screen.HomeScreen`. `screen` owns window sizing and closes popups; `chrome`
-holds the popup manager and widgets; `keybind` defines bindings and help text;
-`store` owns GORM/SQLite persistence; `ui` and `theme` hold shared drawing
-helpers and colors.
+`main.go` starts the Bubble Tea program and delegates to `screen.Root`, which
+owns the active screen and switches between `screen.HomeScreen` and
+`screen.ExplorerScreen` on `OpenCollectionMsg` / `BackToHomeMsg`. `screen` owns
+window sizing and closes popups; `chrome` holds the popup manager and widgets;
+`keybind` defines bindings and help text; `store` owns GORM/SQLite persistence
+and tree operations; `ui` and `theme` hold shared drawing helpers and colors.
 
 Popups have one active model at a time and report results as messages rather
 than acting directly. Store failures become `chrome.OperationError` messages
-that render in the collections popup's status line.
+that render in the collections popup's status line or the explorer's status
+line.
