@@ -14,7 +14,7 @@ func testDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.AutoMigrate(&Collection{}); err != nil {
+	if err := db.AutoMigrate(&Collection{}, &Node{}); err != nil {
 		t.Fatal(err)
 	}
 	return db
@@ -32,6 +32,9 @@ func TestInitDB(t *testing.T) {
 	}
 	if !db.Migrator().HasTable(&Collection{}) {
 		t.Fatal("collections table was not migrated")
+	}
+	if !db.Migrator().HasTable(&Node{}) {
+		t.Fatal("nodes table was not migrated")
 	}
 }
 

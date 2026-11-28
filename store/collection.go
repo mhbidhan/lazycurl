@@ -4,9 +4,11 @@ import (
 	"gorm.io/gorm"
 )
 
+// Collection owns the root nodes of one tree.
 type Collection struct {
 	gorm.Model
-	Name string `gorm:"not null"`
+	Name  string `gorm:"not null"`
+	Nodes []Node `gorm:"foreignKey:CollectionID"`
 }
 
 // NewCollection builds a collection ready to save.

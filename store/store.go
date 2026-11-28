@@ -20,8 +20,9 @@ func InitDB() *gorm.DB {
 		log.Fatal("Failed to connect database:", err)
 	}
 
-	// Schema migrations
-	if err := db.AutoMigrate(&Collection{}); err != nil {
+	// Schema migrations. Nodes migrate after collections so the self-
+	// referential and collection foreign keys have a target table.
+	if err := db.AutoMigrate(&Collection{}, &Node{}); err != nil {
 		log.Fatal("Failed to migrate database:", err)
 	}
 

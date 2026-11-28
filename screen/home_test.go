@@ -18,7 +18,7 @@ func testDB(t *testing.T) *gorm.DB {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := db.AutoMigrate(&store.Collection{}); err != nil {
+	if err := db.AutoMigrate(&store.Collection{}, &store.Node{}); err != nil {
 		t.Fatal(err)
 	}
 	return db
