@@ -194,6 +194,48 @@ func TestRenameFlow(t *testing.T) {
 	}
 }
 
+func TestHelpLineHasOnlyFramePaddingBelow(t *testing.T) {
+	p := testPopup(t, 40, 14)
+	if err := store.SaveCollection(p.db, store.NewCollection("work")); err != nil {
+		t.Fatal(err)
+	}
+	if err := p.reload(); err != nil {
+		t.Fatal(err)
+	}
+
+	blankRow := func(line string) bool { return strings.Trim(line, " │\t") == "" }
+	helpIndex := func(lines []string) int {
+		t.Helper()
+		for i, line := range lines {
+			if strings.Contains(line, "cursor down") {
+				return i
+			}
+		}
+		t.Fatalf("help line missing:\n%s", strings.Join(lines, "\n"))
+		return -1
+	}
+	onlyFramePadding := func(lines []string, i int) bool {
+		return i+1 < len(lines) && blankRow(lines[i+1]) &&
+			i+2 < len(lines) && strings.HasPrefix(lines[i+2], "╰")
+	}
+
+	lines := strings.Split(p.View(), "\n")
+	i := helpIndex(lines)
+	if !blankRow(lines[i-1]) || !onlyFramePadding(lines, i) {
+		t.Fatalf("idle layout around help is wrong:\n%s", strings.Join(lines, "\n"))
+	}
+
+	p.err = errors.New("boom")
+	lines = strings.Split(p.View(), "\n")
+	i = helpIndex(lines)
+	if !strings.Contains(lines[i-1], "Error: boom") {
+		t.Fatalf("error is not above the help line:\n%s", strings.Join(lines, "\n"))
+	}
+	if !onlyFramePadding(lines, i) {
+		t.Fatalf("error added a row below help:\n%s", strings.Join(lines, "\n"))
+	}
+}
+
 func TestPopupViewFitsItsArea(t *testing.T) {
 	for _, tc := range []struct{ w, h int }{{40, 12}, {30, 10}, {20, 8}, {14, 6}} {
 		p := testPopup(t, tc.w, tc.h)

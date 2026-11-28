@@ -34,10 +34,10 @@ const (
 	confirmPopup        PopupID = "confirm"
 )
 
-// Rows under the list in every state: a gap, the help line and the status line.
-// They are reserved while sizing so opening a search or a sub-popup cannot
-// grow the frame past the area the screen gave it.
-const footerRows = 3
+// Rows under the list in every state: the status line and the help line.
+// PopupBox supplies the padding below them, so only these two are reserved
+// while sizing to keep the frame from growing past the area the screen gave it.
+const footerRows = 2
 
 // CollectionsPopup browses collections and owns the flows that change them.
 // Everything it does beyond browsing lives in its own file, named after the
@@ -213,18 +213,20 @@ func (c *CollectionsPopup) View() string {
 			MaxHeight(c.height).
 			Render(m.View())
 
-		content := c.fit(lipgloss.JoinVertical(lipgloss.Top, sub, ui.GapVertical(1), help, status))
+		content := c.fit(lipgloss.JoinVertical(lipgloss.Top, sub, status, help))
 
 		return lipgloss.NewStyle().
 			Align(lipgloss.Center, lipgloss.Center).
 			Width(c.width).
-			Height(c.height).
+			Height(c.height - 2).
 			Render(content)
 	}
 
 	if c.state == stateSearch {
-		return ui.PopupBox(c.fit(lipgloss.JoinVertical(lipgloss.Top, c.searchView(), ui.GapVertical(1), help, status)))
+		return ui.PopupBox(c.fit(lipgloss.JoinVertical(lipgloss.Top, c.searchView(), status, help)))
 	}
 
-	return ui.PopupBox(c.fit(lipgloss.JoinVertical(lipgloss.Top, c.list.view(), ui.GapVertical(1), help, status)))
+	// The status line sits above the help so the padding PopupBox draws below
+	// it stays blank whether or not an error is showing.
+	return ui.PopupBox(c.fit(lipgloss.JoinVertical(lipgloss.Top, c.list.view(), status, help)))
 }
