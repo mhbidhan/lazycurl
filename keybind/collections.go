@@ -16,6 +16,7 @@ type CollectionKeys struct {
 	Edit       key.Binding
 	Escape     key.Binding
 	Submit     key.Binding
+	Open       key.Binding
 }
 
 // NewCollectionKeys builds the collections bindings with their help labels.
@@ -54,12 +55,16 @@ func NewCollectionKeys() *CollectionKeys {
 			key.WithKeys("enter"),
 			key.WithHelp("enter", "apply filter"),
 		),
+		Open: key.NewBinding(
+			key.WithKeys("enter"),
+			key.WithHelp("enter", "open collection"),
+		),
 	}
 }
 
 // ShortHelp renders the hint line under the collections popup.
 func (k *CollectionKeys) ShortHelp() string {
-	return k.helpModel.ShortHelpView([]key.Binding{k.CursorDown, k.CursorUp, k.Escape})
+	return k.helpModel.ShortHelpView([]key.Binding{k.CursorDown, k.CursorUp, k.Open, k.Escape})
 }
 
 // GetKeybinds lists every collections binding for the keybinds popup.
@@ -73,5 +78,6 @@ func (k *CollectionKeys) GetKeybinds() []KeyInfo {
 		{Key: "ctrl+d", Help: "delete collection"},
 		{Key: "ctrl+e", Help: "rename collection"},
 		{Key: "enter", Help: "apply filter"},
+		{Key: "enter", Help: "open collection"},
 	}
 }

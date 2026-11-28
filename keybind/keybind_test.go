@@ -68,11 +68,62 @@ func TestCollectionKeys(t *testing.T) {
 	}
 
 	bindings := k.GetKeybinds()
-	if len(bindings) != 8 {
+	if len(bindings) != 9 {
 		t.Fatalf("keybinds = %+v", bindings)
 	}
 	if bindings[7].Key != "enter" || bindings[7].Help != "apply filter" {
 		t.Fatalf("submit entry = %+v", bindings[7])
+	}
+	if bindings[8].Key != "enter" || bindings[8].Help != "open collection" {
+		t.Fatalf("open entry = %+v", bindings[8])
+	}
+}
+
+func TestExplorerKeys(t *testing.T) {
+	k := NewExplorerKeys()
+
+	for _, tc := range []struct {
+		msg  tea.KeyMsg
+		bind key.Binding
+	}{
+		{runeKey("j"), k.CursorDown},
+		{runeKey("k"), k.CursorUp},
+		{runeKey("h"), k.Collapse},
+		{runeKey("l"), k.Expand},
+		{runeKey("enter"), k.Toggle},
+		{runeKey("g"), k.Top},
+		{runeKey("G"), k.Bottom},
+		{runeKey("/"), k.Search},
+		{runeKey("a"), k.AddChild},
+		{runeKey("A"), k.AddSibling},
+		{runeKey("d"), k.Delete},
+		{runeKey("r"), k.Rename},
+		{runeKey("x"), k.Cut},
+		{runeKey("c"), k.Copy},
+		{runeKey("p"), k.Paste},
+		{runeKey("J"), k.MoveDown},
+		{runeKey("K"), k.MoveUp},
+		{runeKey("?"), k.Help},
+		{runeKey("q"), k.Back},
+		{tea.KeyMsg{Type: tea.KeyDown}, k.CursorDown},
+		{tea.KeyMsg{Type: tea.KeyRight}, k.Expand},
+	} {
+		if !key.Matches(tc.msg, tc.bind) {
+			t.Errorf("%v should match %q", tc.msg, tc.bind.Help().Key)
+		}
+	}
+	if key.Matches(runeKey("m"), k.Cut) || key.Matches(runeKey("m"), k.Copy) {
+		t.Error("m should no longer mark a node")
+	}
+
+	help := k.ShortHelp()
+	for _, want := range []string{"cursor down", "toggle", "add request", "mark to move", "mark to copy", "back to home"} {
+		if !strings.Contains(help, want) {
+			t.Errorf("short help %q missing %q", help, want)
+		}
+	}
+	if got := len(k.GetKeybinds()); got != 19 {
+		t.Fatalf("keybinds = %d, want 19", got)
 	}
 }
 
