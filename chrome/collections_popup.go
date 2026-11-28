@@ -160,6 +160,11 @@ func (c *CollectionsPopup) updateList(msg tea.Msg) tea.Cmd {
 	case key.Matches(keyMsg, c.keybind.Edit):
 		c.askRename()
 		return nil
+	case key.Matches(keyMsg, c.keybind.Open):
+		if coll, ok := c.list.current(); ok {
+			return func() tea.Msg { return OpenCollectionMsg{Collection: coll} }
+		}
+		return nil
 	}
 
 	return c.list.update(msg)

@@ -82,6 +82,29 @@ func TestFailedCreateShowsStatusLine(t *testing.T) {
 	}
 }
 
+func TestOpenCollectionMessage(t *testing.T) {
+	p := testPopup(t, 40, 12)
+	coll := store.NewCollection("work")
+	if err := store.SaveCollection(p.db, coll); err != nil {
+		t.Fatal(err)
+	}
+	if err := p.reload(); err != nil {
+		t.Fatal(err)
+	}
+
+	_, cmd := p.Update(enterKey())
+	if cmd == nil {
+		t.Fatal("enter did not ask to open the collection")
+	}
+	msg, ok := cmd().(OpenCollectionMsg)
+	if !ok {
+		t.Fatalf("enter returned %T, want OpenCollectionMsg", cmd())
+	}
+	if msg.Collection.ID != coll.ID || msg.Collection.Name != "work" {
+		t.Fatalf("open message = %+v", msg)
+	}
+}
+
 func TestSearchFlow(t *testing.T) {
 	p := testPopup(t, 40, 12)
 	if err := store.SaveCollection(p.db, store.NewCollection("work")); err != nil {
